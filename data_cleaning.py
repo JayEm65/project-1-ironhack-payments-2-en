@@ -43,18 +43,20 @@ def remove_nan(data_frame, col_):
 def selecting_data_types(data_frame):
     '''This function separates data into numerical and categorical columns.'''
     numerical_df = data_frame.select_dtypes(include=["number"])
-    categorical_df = data_frame.select_dtypes(exclude=["number"])
+    categorical_df = data_frame.select_dtypes(exclude=["number", "datetime64[ns]"])
+    datetime_df = data_frame.select_dtypes(include=["datetime64[ns]"])
 
     cat_from_num = numerical_df.loc[:, numerical_df.nunique() < 20]
 
     cat_df = pd.concat([categorical_df, cat_from_num], axis=1)
 
-    num_df = numerical_df.drop(columns=numerical_df.columns[numerical_df.columns.isin(cat_from_num.columns)])
+    num_df = numerical_df.drop(columns=cat_from_num.columns)
+    #num_df = numerical_df.drop(columns=numerical_df.columns[numerical_df.columns.isin(cat_from_num.columns)])
     
     id_columns = [col for col in num_df.columns if 'id' in col.lower()]
     num_df = num_df.drop(columns=id_columns)
 
-    return (cat_df, num_df)
+    return (cat_df, num_df, datetime_df)
 
 
 def merge_df(data_frame_1, data_frame_2, how_, index):
@@ -75,6 +77,8 @@ def ensure_correct_data_types(df, date_columns, numeric_columns=None):
     '''This function ensures that date columns are in datetime format and numeric columns
        are of the correct type.'''
     
+    import pandas as pd
+    
     # Ensure date columns are in datetime format:
     for column in date_columns:
         if column in df.columns:
@@ -94,3 +98,22 @@ def ensure_correct_data_types(df, date_columns, numeric_columns=None):
     
     return df
 
+    import pandas as pd
+
+def clean_text_column(data_frame, column_name):
+    data_frame[column_name] = data_frame[column_name].str.replace(r'[\d/-]+', '', regex=True).str.strip()
+    return data_frame
+
+def drop_col(data_frame, cols):
+    data_frame = data_frame.drop(cols, axis = 1)
+    return data_frame
+
+import pandas as pd
+
+def process_date_columns(df, date_col1, date_col2, new_col_name="days_difference"):
+
+
+    df_cleaned = df.dropna(subset=[date_col1, date_col2]).copy()
+    df_cleaned[new_col_name] = (df_cleaned[date_col2] - df_cleaned[date_col1]).dt.days.abs()
+
+    return df_cleaned[[date_col1, date_col2, new_col_name]]
