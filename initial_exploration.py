@@ -1,4 +1,4 @@
-'''This file perform and initial data check and output important details
+'''This file perform and initial exploration and output important details
 from the data'''
 
 import numpy as np
