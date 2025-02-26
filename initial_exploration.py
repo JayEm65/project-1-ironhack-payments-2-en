@@ -28,12 +28,12 @@ def initial_chk(data_frame):
         if col_ in categorical_columns:
             print(f"{data_frame[col_].value_counts()}\n")
 
-def chech_null(data_frame):
+def check_null(data_frame):
     '''Check for NaN values in each column and print the total per column'''
     print("Count of null values:")
     print(data_frame.isnull().sum())
 
-def chech_duplicated(data_frame):
+def check_duplicated(data_frame):
     '''Check for duplicated values in the data frame and print the total'''
     print("\nCount of duplicated values:")
     print(data_frame.duplicated().sum())
@@ -41,7 +41,7 @@ def chech_duplicated(data_frame):
 def check(data_frame):
     '''A function to call all the function for the data cleaning'''
     initial_chk(data_frame)
-    chech_null(data_frame)
-    chech_duplicated(data_frame)
+    check_null(data_frame)
+    check_duplicated(data_frame)
 
     

@@ -1,8 +1,8 @@
 import pandas as pd
 
 # Load datasets:
-cash_request_data = pd.read_csv('project_dataset/extract - cash request - data analyst.csv')
-fees_data = pd.read_csv('project_dataset/extract - fees - data analyst - .csv')
+#cash_request_data = pd.read_csv('project_dataset/extract - cash request - data analyst.csv')
+#fees_data = pd.read_csv('project_dataset/extract - fees - data analyst - .csv')
 
 # Function to convert date columns to European style and remove the time:
 def convert_dates(df, date_columns):
@@ -18,16 +18,16 @@ cash_request_date_columns = ['created_at', 'updated_at', 'moderated_at', 'reimbu
 fees_data_date_columns = ['created_at', 'updated_at', 'paid_at', 'from_date', 'to_date', 'charge_moment']
 
 # Convert dates:
-cash_request_data = convert_dates(cash_request_data, cash_request_date_columns)
-fees_data = convert_dates(fees_data, fees_data_date_columns)
+#cash_request_data = convert_dates(cash_request_data, cash_request_date_columns)
+#fees_data = convert_dates(fees_data, fees_data_date_columns)
 
 # Save new datasets:
-cash_request_data.to_csv('project_dataset/extract - cash request - data analyst formatted.csv', index=False)
-fees_data.to_csv('project_dataset/extract - fees - data analyst - formatted.csv', index=False)
+#cash_request_data.to_csv('project_dataset/extract - cash request - data analyst formatted.csv', index=False)
+#fees_data.to_csv('project_dataset/extract - fees - data analyst - formatted.csv', index=False)
 
 # Check:
-print(cash_request_data.head())
-print(fees_data.head())
+#print(cash_request_data.head())
+#print(fees_data.head())
 '''This file group functions for data cleaning like dealing with nan values,
     merging data frames and formating dates'''
 
@@ -38,8 +38,7 @@ def remove_nan(data_frame, col_):
         has NaN values. It also print the number of rows removed and the
         list of columns and total Nan values per column'''
     print(f"{data_frame[col_].isna().sum()} rows were removed\n")
-    explo.chech_null(data_frame)
-    return data_frame(subset = [col_])
+    return data_frame.dropna(subset = [col_])
 
 
 def selecting_data_types(data_frame):
@@ -49,3 +48,7 @@ def selecting_data_types(data_frame):
     cat_df = pd.concat([categorical_df,cat_from_num], axis = 1)
     num_df = numerical_df.drop(columns=numerical_df.columns[numerical_df.columns.isin(cat_from_num.columns)])
     return (cat_df, num_df)
+
+def merge_df(data_frame_1, data_frame_2, how_, index_1, index_2):
+    data = data_frame_1.merge(data_frame_2, how=how_, left_on=index_1, right_on=index_2)
+    return data
