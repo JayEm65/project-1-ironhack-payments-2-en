@@ -38,8 +38,8 @@ def remove_nan(data_frame, col_):
         has NaN values. It also print the number of rows removed and the
         list of columns and total Nan values per column'''
     print(f"{data_frame[col_].isna().sum()} rows were removed\n")
-    explo.chech_null(data_frame)
-    return data_frame(subset = [col_])
+    explo.check_null(data_frame)
+    return data_frame.dropna(subset = [col_])
 
 
 def selecting_data_types(data_frame):
