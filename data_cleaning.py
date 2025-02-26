@@ -44,11 +44,25 @@ def remove_nan(data_frame, col_):
 def selecting_data_types(data_frame):
     numerical_df = data_frame.select_dtypes(include=["number"])
     categorical_df = data_frame.select_dtypes(exclude=["number"])
+
     cat_from_num = numerical_df.loc[:, numerical_df.nunique() < 20]
     cat_df = pd.concat([categorical_df,cat_from_num], axis = 1)
+
     num_df = numerical_df.drop(columns=numerical_df.columns[numerical_df.columns.isin(cat_from_num.columns)])
+    
+    id_columns = [col for col in num_df.columns if 'id' in col.lower()]
+    num_df = num_df.drop(columns=id_columns)
+
     return (cat_df, num_df)
 
-def merge_df(data_frame_1, data_frame_2, how_, index_1, index_2):
-    data = data_frame_1.merge(data_frame_2, how=how_, left_on=index_1, right_on=index_2)
+def merge_df(data_frame_1, data_frame_2, how_, index):
+    data = data_frame_1.merge(data_frame_2, on=index, how=how_)
     return data
+
+def rename_col(data_frame, old, new):
+    data_frame.rename(columns={old: new}, inplace=True)
+
+def rename_col_xy(data_frame):
+    data_frame = data_frame.rename(columns={col: f"CR_{col[:-2]}" for col in data_frame.columns if col.endswith('_x')})
+    data_frame = data_frame.rename(columns={col: f"fee_{col[:-2]}" for col in data_frame.columns if col.endswith('_y')})
+    return data_frame
