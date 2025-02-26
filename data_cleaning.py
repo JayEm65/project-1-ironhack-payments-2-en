@@ -40,3 +40,12 @@ def remove_nan(data_frame, col_):
     print(f"{data_frame[col_].isna().sum()} rows were removed\n")
     explo.chech_null(data_frame)
     return data_frame(subset = [col_])
+
+
+def selecting_data_types(data_frame):
+    numerical_df = data_frame.select_dtypes(include=["number"])
+    categorical_df = data_frame.select_dtypes(exclude=["number"])
+    cat_from_num = numerical_df.loc[:, numerical_df.nunique() < 20]
+    cat_df = pd.concat([categorical_df,cat_from_num], axis = 1)
+    num_df = numerical_df.drop(columns=numerical_df.columns[numerical_df.columns.isin(cat_from_num.columns)])
+    return (cat_df, num_df)
