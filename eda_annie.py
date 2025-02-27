@@ -113,3 +113,71 @@ def stat_viz(data_frame, col_):
     sns.despine()  # Remove top and right spines
 
     plt.show()
+
+def revenue_metric(df, _col):
+    # Create the cohort (year-month) from the index
+    df['cohort_month'] = df.index.to_period('M')
+    monthly_totals = df.groupby('cohort_month')[_col].sum().reset_index()
+   
+    total_amount_sum = monthly_totals['total_amount'].sum()
+    monthly_totals['percentage'] = round((monthly_totals['total_amount'] / total_amount_sum) * 100,2)
+
+    total_row = pd.DataFrame({
+        'cohort_month': ['Total'],
+        'total_amount': [total_amount_sum],
+        'percentage': ['100 %']  # The sum of all percentages should be 100%
+    })
+
+    monthly_totals = pd.concat([monthly_totals, total_row], ignore_index=True)
+
+
+    return monthly_totals
+
+def revenue_plot(monthly_totals):
+
+    plt.figure(figsize=(12, 6))
+
+    plot_data = monthly_totals[monthly_totals['cohort_month'] != 'Total']
+
+    sns.barplot(x=plot_data['cohort_month'].astype(str),  # Convert Period to string for plotting
+                y=plot_data['total_amount'],
+                palette="viridis")
+
+    plt.xticks(rotation=45, ha='right')
+    plt.xlabel("Cohort Month", fontsize=12)
+    plt.ylabel("Total Amount in Fees", fontsize=12)
+    plt.title("Total Amount in Fees per Cohort", fontsize=14, fontweight='bold')
+
+    plt.savefig("plots/revenue_metric_bar_plot.png", dpi=300, bbox_inches='tight')
+
+    plt.show()
+
+def revenue_plot_per_user(df):
+
+    df['cohort_month'] = df.index.to_period('M')
+
+    cohort_data = df.groupby('cohort_month').agg(
+        total_fees=('total_amount', 'sum'),
+        user_count=('user_id', 'nunique')
+    ).reset_index()
+
+    cohort_data['ARPU'] = cohort_data['total_fees'] / cohort_data['user_count']
+
+    all_months = pd.period_range(start=df['cohort_month'].min(), end=df['cohort_month'].max(), freq='M')
+    cohort_data = cohort_data.set_index('cohort_month').reindex(all_months).reset_index().rename(columns={'index': 'cohort_month'})
+    cohort_data.fillna({'total_fees': 0, 'user_count': 0, 'ARPU': 0}, inplace=True)  
+
+   
+    plt.figure(figsize=(12, 6))
+    sns.barplot(x=cohort_data['cohort_month'].astype(str), y=cohort_data['ARPU'], palette="mako")
+
+ 
+    plt.xticks(rotation=45, ha='right')  # Rotate x labels for readability
+    plt.xlabel("Cohort Month", fontsize=12)
+    plt.ylabel("Average Revenue per User", fontsize=12)
+    plt.title("Average revenue per user by cohort", fontsize=14, fontweight='bold')
+
+    plt.savefig("plots/average_revenue_per_user.png", dpi=300, bbox_inches="tight")
+
+    # Show the Plot
+    plt.show()

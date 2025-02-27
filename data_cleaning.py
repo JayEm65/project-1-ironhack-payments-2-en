@@ -57,7 +57,7 @@ def selecting_data_types(data_frame):
     num_df = numerical_df.drop(columns=cat_from_num.columns)
     #num_df = numerical_df.drop(columns=numerical_df.columns[numerical_df.columns.isin(cat_from_num.columns)])
     
-    id_columns = [col for col in num_df.columns if 'id' in col.lower()]
+    id_columns = [col for col in num_df.columns if ('id' in col.lower()) and (col.lower() != 'user_id')]
     num_df = num_df.drop(columns=id_columns)
 
     return (cat_df, num_df, datetime_df)
@@ -132,3 +132,12 @@ def set_index(data_frame, df, id_column):
     data_frame[id_column] = df[id_column]
     data_frame = data_frame.set_index(id_column)
     return data_frame
+
+def move_column(df_from, df_to, column_name):
+
+    df_from = df_from.reset_index(drop=True)
+    df_to = df_to.reset_index(drop=True)
+
+    df_to[column_name] = df_from[column_name]  
+    df_from = df_from.drop(columns=[column_name])
+    return (df_from, df_to)
