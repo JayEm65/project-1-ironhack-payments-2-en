@@ -9,13 +9,16 @@ def convert_dates(df, date_columns):
     for column in date_columns:
         if column in df.columns:
             # Convert datetime and drop time:
-            df[column] = pd.to_datetime(df[column], errors='coerce').dt.strftime('%d/%m/%Y')
-    return df
+            #df[column] = pd.to_datetime(df[column], errors='coerce').dt.strftime('%d/%m/%Y')
+            df[column] = pd.to_datetime(df[column], errors='coerce', dayfirst = True)
+            df[column] = df[column].dt.date
+            df[column] = pd.to_datetime(df[column])
+
 
 # List date columns to be formatted:
 cash_request_date_columns = ['created_at', 'updated_at', 'moderated_at', 'reimbursement_date', 
                              'cash_request_received_date', 'money_back_date', 'send_at', 'reco_creation', 'reco_last_update']
-fees_data_date_columns = ['created_at', 'updated_at', 'paid_at', 'from_date', 'to_date', 'charge_moment']
+fees_data_date_columns = ['created_at', 'updated_at', 'paid_at', 'from_date', 'to_date']
 
 # Convert dates:
 #cash_request_data = convert_dates(cash_request_data, cash_request_date_columns)
@@ -42,6 +45,7 @@ def remove_nan(data_frame, col_):
 
 def selecting_data_types(data_frame):
     '''This function separates data into numerical and categorical columns.'''
+
     numerical_df = data_frame.select_dtypes(include=["number"])
     categorical_df = data_frame.select_dtypes(exclude=["number", "datetime64[ns]"])
     datetime_df = data_frame.select_dtypes(include=["datetime64[ns]"])
@@ -65,6 +69,7 @@ def merge_df(data_frame_1, data_frame_2, how_, index):
 
 def rename_col(data_frame, old, new):
     data_frame.rename(columns={old: new}, inplace=True)
+    return data_frame
 
 def rename_col_xy(data_frame):
     data_frame = data_frame.rename(columns={col: f"CR_{col[:-2]}" for col in data_frame.columns if col.endswith('_x')})
@@ -117,3 +122,13 @@ def process_date_columns(df, date_col1, date_col2, new_col_name="days_difference
     df_cleaned[new_col_name] = (df_cleaned[date_col2] - df_cleaned[date_col1]).dt.days.abs()
 
     return df_cleaned[[date_col1, date_col2, new_col_name]]
+
+def merge_by_index(data_frame1, data_frame2, how_, col_):
+    merged_df = data_frame1.join(data_frame2[col_], how=how_)
+    return merged_df
+
+
+def set_index(data_frame, df, id_column):
+    data_frame[id_column] = df[id_column]
+    data_frame = data_frame.set_index(id_column)
+    return data_frame
