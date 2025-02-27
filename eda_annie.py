@@ -96,7 +96,7 @@ def stat_viz(data_frame, col_):
 
 
 
-    sns.histplot(data_frame[col_].dropna(), kde=True, color=sns.color_palette("viridis")[0], ax=ax_hist)
+    sns.histplot(data_frame[col_].dropna(), kde=True, color=sns.color_palette("viridis")[3], ax=ax_hist)
 
     # Set title and labels for the histogram
     ax_hist.set_title(f'Histogram of {col_.replace("CR", "Cash Request").replace("_", " ").title()}', fontsize=14, fontweight="bold")
