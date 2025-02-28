@@ -337,6 +337,77 @@ def line_plot(cat, num):
     plt.savefig("plots/scatter_plot_CR_days_fee_days.png", dpi=300, bbox_inches='tight')
     plt.show()
 
+def fre(data_df):
+
+    data_df['first_advance_date'] = data_df.groupby('user_id')['CR_created_at'].transform('min')
+    #create cohort using dates from the first transactions, and grouping all users according to user id.
+
+    data_df['cohort_month'] = data_df['first_advance_date'].dt.to_period('M')
+    # extracts month and year from the first advance column and converts it to a period format.
+
+    data_df['cohort_index'] = (data_df['CR_created_at'].dt.year - data_df['first_advance_date'].dt.year) * 12 + \
+                     (data_df['CR_created_at'].dt.month - data_df['first_advance_date'].dt.month) + 1
 
 
+    data_df['cohort_month'] = data_df['first_advance_date'].dt.to_period('M')
+    data_df.groupby('cohort_month').size() 
 
+    cohort_table = data_df.groupby(['cohort_month', data_df['CR_created_at'].dt.to_period('M')])['user_id'].count()
+    cohort_table = cohort_table.unstack()
+    cohort_table = cohort_table.fillna(0)                
+
+    cohort_size = data_df.groupby('cohort_month')['user_id'].nunique()
+    # counts how many unique users belong to each cohort month. 
+    cohort_size
+
+    # count the number of times each user used the service in each month
+    cohort_usage = data_df.groupby(['cohort_month', data_df['CR_created_at'].dt.to_period('M')])['user_id'].count()
+
+    # each row is a cohort, and each column is a month
+    cohort_usage = cohort_usage.unstack(fill_value=0)
+    # Calculate the frequency of service usage by dividing the usage count by cohort size
+    cohort_usage_frequency = cohort_usage.divide(cohort_size, axis=0)  # Divide usage by cohort size
+
+    cohort_usage_percentage = cohort_usage.div(cohort_size, axis=0) * 100
+    cohort_usage_percentage.fillna(0, inplace=True)
+
+    data_df['first_advance_date'] = data_df.groupby('user_id')['CR_created_at'].transform('min')
+    data_df['cohort_month'] = data_df['first_advance_date'].dt.to_period('M')
+
+    new_users = data_df.groupby('cohort_month')['user_id'].nunique()
+
+    interactions = data_df.groupby('cohort_month')['user_id'].count()
+
+    frequency_of_usage = interactions / new_users
+    cohort_usage_matrix = data_df.groupby(['cohort_month', data_df['CR_created_at'].dt.to_period('M')])['user_id'].count().unstack()
+
+    cohort_usage_matrix.fillna(0, inplace=True)
+
+    plt.figure(figsize=(12, 8))
+    sns.heatmap(cohort_usage_matrix, annot=True, fmt='g', cmap='Blues', cbar=True)
+    plt.title('Heatmap of Service Usage by Cohort and Month')
+    plt.xlabel('Month of Interaction')
+    plt.ylabel('Cohort Month')
+    plt.xticks(rotation=45) 
+    plt.show()
+
+    return cohort_size, cohort_table
+
+
+def fre_bar(cohort_table):
+
+    frequency_by_month = cohort_table.sum(axis=0) 
+
+    plt.figure(figsize=(12, 6))
+    sns.barplot(x=frequency_by_month.index.astype(str), y=frequency_by_month.values, palette='Blues')
+
+    plt.title('Frequency of Service Usage by Month')
+    plt.xlabel('Month')
+    plt.ylabel('Number of Interactions')
+    plt.xticks(rotation=45)
+    plt.show()
+
+    frequency_table = cohort_table.sum(axis=0) 
+    frequency_table = frequency_table.reset_index() 
+    frequency_table.columns = ['Month', 'Total Interactions']
+    return frequency_table
