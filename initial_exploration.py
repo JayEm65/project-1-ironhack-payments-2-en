@@ -1,8 +1,6 @@
 '''This file perform and initial exploration and output important details
 from the data'''
 
-import numpy as np
-
 def initial_chk(data_frame):
     '''This function check for the number of columns and rows, 
         the data types, unique values, pisble categorial values
