@@ -6,6 +6,7 @@ import pandas as pd
 
 # Function to convert date columns to European style and remove the time:
 def convert_dates(df, date_columns):
+    '''This function is for formatting dates'''
     for column in date_columns:
         if column in df.columns:
             # Convert datetime and drop time:
@@ -34,11 +35,10 @@ fees_data_date_columns = ['created_at', 'updated_at', 'paid_at', 'from_date', 't
 '''This file groups functions for data cleaning like dealing with NaN values,
     merging data frames, and formatting dates'''
 
-import initial_exploration as explo
-
 def remove_nan(data_frame, col_):
     '''This function removes the rows where a specific column has NaN values.
        It also prints the number of rows removed and the list of columns and total NaN values per column.'''
+    
     print(f"{data_frame[col_].isna().sum()} rows were removed\n")
     return data_frame.dropna(subset = [col_])
 
@@ -64,14 +64,20 @@ def selecting_data_types(data_frame):
 
 
 def merge_df(data_frame_1, data_frame_2, how_, index):
+    '''This function merges two data frames.'''
+
     data = data_frame_1.merge(data_frame_2, on=index, how=how_)
     return data
 
 def rename_col(data_frame, old, new):
+    '''This function renames a column.'''
+
     data_frame.rename(columns={old: new}, inplace=True)
     return data_frame
 
 def rename_col_xy(data_frame):
+    '''This function rename columns that have equal number during the merge.'''
+
     data_frame = data_frame.rename(columns={col: f"CR_{col[:-2]}" for col in data_frame.columns if col.endswith('_x')})
     data_frame = data_frame.rename(columns={col: f"fee_{col[:-2]}" for col in data_frame.columns if col.endswith('_y')})
     return data_frame
@@ -81,8 +87,6 @@ def rename_col_xy(data_frame):
 def ensure_correct_data_types(df, date_columns, numeric_columns=None):
     '''This function ensures that date columns are in datetime format and numeric columns
        are of the correct type.'''
-    
-    import pandas as pd
     
     # Ensure date columns are in datetime format:
     for column in date_columns:
@@ -103,9 +107,9 @@ def ensure_correct_data_types(df, date_columns, numeric_columns=None):
     
     return df
 
-    import pandas as pd
-
 def clean_text_column(data_frame, column_name):
+    '''This function cleans the reason column from numerical data.'''
+
     data_frame[column_name] = data_frame[column_name].str.replace(r'[\d/-]+', '', regex=True).str.strip()
     return data_frame
 
@@ -113,10 +117,8 @@ def drop_col(data_frame, cols):
     data_frame = data_frame.drop(cols, axis = 1)
     return data_frame
 
-import pandas as pd
-
 def process_date_columns(df, date_col1, date_col2, new_col_name="days_difference"):
-
+    '''This function substrate two dates columns.'''
 
     df_cleaned = df.dropna(subset=[date_col1, date_col2]).copy()
     df_cleaned[new_col_name] = (df_cleaned[date_col2] - df_cleaned[date_col1]).dt.days.abs()
@@ -124,16 +126,20 @@ def process_date_columns(df, date_col1, date_col2, new_col_name="days_difference
     return df_cleaned[[date_col1, date_col2, new_col_name]]
 
 def merge_by_index(data_frame1, data_frame2, how_, col_):
+    '''This function merges two data frames by a column.'''
+
     merged_df = data_frame1.join(data_frame2[col_], how=how_)
     return merged_df
 
-
 def set_index(data_frame, df, id_column):
+    '''This function set a column as index.'''
+
     data_frame[id_column] = df[id_column]
     data_frame = data_frame.set_index(id_column)
     return data_frame
 
 def move_column(df_from, df_to, column_name):
+    '''This function remove a column from a data frame and move it to another data frame.'''
 
     df_from = df_from.reset_index(drop=True)
     df_to = df_to.reset_index(drop=True)
