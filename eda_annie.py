@@ -3,8 +3,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 
-import data_cleaning as cl
-
 # Generate frequency table for category columns
 def freq(data_frame, col_):
     
@@ -122,6 +120,9 @@ def revenue_metric(df, _col):
     total_amount_sum = monthly_totals['total_amount'].sum()
     monthly_totals['percentage'] = round((monthly_totals['total_amount'] / total_amount_sum) * 100,2)
 
+    
+
+
     total_row = pd.DataFrame({
         'cohort_month': ['Total'],
         'total_amount': [total_amount_sum],
@@ -129,13 +130,16 @@ def revenue_metric(df, _col):
     })
 
     monthly_totals = pd.concat([monthly_totals, total_row], ignore_index=True)
-
+    monthly_totals.set_index('cohort_month', inplace=True)
 
     return monthly_totals
+   
 
 def revenue_plot(monthly_totals):
 
     plt.figure(figsize=(12, 6))
+    monthly_totals.reset_index(inplace=True)
+
 
     plot_data = monthly_totals[monthly_totals['cohort_month'] != 'Total']
 
@@ -167,6 +171,9 @@ def revenue_plot_per_user(df):
     cohort_data = cohort_data.set_index('cohort_month').reindex(all_months).reset_index().rename(columns={'index': 'cohort_month'})
     cohort_data.fillna({'total_fees': 0, 'user_count': 0, 'ARPU': 0}, inplace=True)  
 
+    cohort_data['cohort_month'] = cohort_data['cohort_month'].astype(str)  # Convert to string
+    cohort_data['cohort_month'] = pd.to_datetime(cohort_data['cohort_month']).dt.to_period('M')
+
    
     plt.figure(figsize=(12, 6))
     sns.barplot(x=cohort_data['cohort_month'].astype(str), y=cohort_data['ARPU'], palette="mako")
@@ -181,3 +188,155 @@ def revenue_plot_per_user(df):
 
     # Show the Plot
     plt.show()
+    return cohort_data
+
+def incident_metric(data_df):
+
+    # Create the cohort (year-month) from the index
+    data_df['cohort_month'] = data_df.index.to_period('M')
+   
+    # Filter only relevant incidents:
+    incident_counts = (data_df[data_df['reason'].isin(['rejected direct debit', 'month delay on payment', 'postpone cash request'])]
+                    .groupby(['cohort_month', 'reason'])
+                    .size()
+                    .unstack(fill_value=0))
+
+    # Compute total requests per cohort:
+    total_requests = data_df.groupby('cohort_month').size()
+
+    # Calculate incident rate as a percentage:
+    incident_rate = (incident_counts.div(total_requests, axis=0) * 100)
+
+    # Plot stacked bar chart:
+    
+    plt.figure(figsize=(12, 6))
+    incident_rate.plot(kind='bar', stacked=True)
+
+ 
+    plt.xticks(rotation=45, ha='right')  # Rotate x labels for readability
+    plt.ylabel('Incident Rate (%)', fontsize=12)
+    plt.xlabel('Cohort Month', fontsize=12)
+    plt.legend(title="Incident Types", bbox_to_anchor=(1.05, 1), loc='upper left')
+
+    plt.legend([label.capitalize() for label in ['month delay on payment', 'rejected direct debit']])
+
+    plt.title('Incident Rate by Cohort Month', fontsize=14, fontweight='bold')
+    plt.tight_layout()
+    plt.savefig("plots/incident_rate_percent_of_total_transactions.png", dpi=300, bbox_inches="tight")
+
+    # Show the Plot
+    plt.show()
+    return incident_rate
+
+
+def bi_rev_incid(cat_new, num_new):
+    cat_new = cat_new.reset_index()
+    cat_new = cat_new[['CR_created_at', 'reason']]
+    df_grouped = cat_new.pivot_table(index='CR_created_at', columns='reason', aggfunc='size', fill_value=0)
+    df_grouped['cohort_month'] = df_grouped.index.to_period('M')
+    columns_to_aggregate = ['Instant Payment Cash Request', 'Postpone Cash Request', 'month delay on payment', 'rejected direct debit']
+    monthly_totals = df_grouped.groupby('cohort_month')[columns_to_aggregate].sum().reset_index()
+    df_merged = monthly_totals.merge(num_new, on='cohort_month', how='inner')
+    df_merged = df_merged[["cohort_month", "total_fees","Instant Payment Cash Request", "Postpone Cash Request", "month delay on payment", "rejected direct debit"]]
+
+    df_melted = df_merged.melt(id_vars=["cohort_month", "total_fees"], 
+                    value_vars=["Instant Payment Cash Request", "Postpone Cash Request", "month delay on payment", "rejected direct debit"],
+                    var_name="incident_reason", 
+                    value_name="revenue")
+
+    plt.figure(figsize=(12, 6))
+
+    # Create a stacked bar plot
+    sns.barplot(x="cohort_month", y="revenue", hue="incident_reason", data=df_melted, palette="Set2")
+
+    # Beautify the plot
+    plt.xticks(rotation=45, ha='right')  # Rotate x-axis labels for readability
+    plt.xlabel("Cohort Month", fontsize=12)
+    plt.ylabel("Revenue Breakdown", fontsize=12)
+    plt.title("Revenue Breakdown by Incident Reason for Each Cohort", fontsize=14, fontweight='bold')
+
+    # Show the plot
+    plt.legend(title="Incident Reason", loc="upper left")
+    plt.tight_layout()
+    plt.savefig("plots/bivariant_bar_plot_revenue_incident.png", dpi=300, bbox_inches="tight")
+    plt.show()
+    return df_merged
+
+def restruct(df_new, num_c):
+    df_new = df_new.reset_index()
+    df_new = df_new[['CR_created_at', 'reason']]
+
+    num_c.reset_index(inplace=True)
+
+    df_merged = df_new.merge(num_c, on='CR_created_at', how='inner')
+
+    df_cleaned = df_merged.dropna(subset=['total_amount', 'reason'])
+    df_cleaned = df_cleaned[['CR_created_at', 'reason', 'total_amount']]
+
+    df_grouped = df_cleaned.pivot_table(index='CR_created_at', columns='reason', values=["total_amount"])
+
+    df_grouped['cohort_month'] = df_grouped.index.to_period('M')
+    monthly_totals = df_grouped.groupby('cohort_month').sum().reset_index()
+    monthly_totals
+
+
+    df_multiindex = monthly_totals.set_index(['cohort_month'])
+
+    stacked_data = df_multiindex.stack()
+   
+    unstacked_data = stacked_data.unstack('cohort_month')
+   
+    return (df_multiindex, stacked_data, unstacked_data)
+
+def fee_heat_map(data_df, col1, col2, x, y):
+    # Create the crosstab table
+    crosstab_table = pd.crosstab(data_df[col1], data_df[col2])
+
+    # Plot the heatmap
+    plt.figure(figsize=(10, 6))
+    sns.heatmap(crosstab_table, annot=True, fmt='d', cmap='Blues')
+
+    # Beautify the plot
+    plt.xlabel(f"{x}")
+    plt.ylabel(f"{y}")
+    plt.xticks(rotation=45, ha='right')
+    plt.title(f'Heatmap of {col2} vs {col1}')
+    plt.savefig(f"plots/bivariant_heatmap_{col1}_vs_{col2}.png", dpi=300, bbox_inches="tight")
+
+    # Show the plot
+    plt.show()
+    return crosstab_table
+
+
+
+def cat_con(cat, num):
+
+    df_merged = cat.merge(num, on='CR_created_at', how='inner')
+    df_merged = df_merged.reset_index(drop=True)
+
+    plt.figure(figsize=(12, 6))
+    pd.set_option('display.max_columns', None)
+
+    sns.boxplot(data=df_merged, x="reason", y="days_difference_fee_paid", palette="viridis")
+    plt.xticks(rotation=45, ha='right')
+    plt.title("Box plot between the fee incident and the payment time", fontsize=14, fontweight='bold')
+    plt.ylabel("Times in day to pay the fee", fontsize=12)
+    plt.xlabel("Fee reason", fontsize=12)
+    plt.savefig("plots/box_plot_incident_days.png", dpi=300, bbox_inches='tight')
+    plt.show()
+
+def line_plot(cat, num):
+    df_merged = cat.merge(num, on='CR_created_at', how='inner')
+    df_merged = df_merged.reset_index(drop=True)
+    df_merged = df_merged.dropna(subset=["days_difference_CR_back", "days_difference_fee_paid"])
+
+    sns.scatterplot(data=df_merged, x='days_difference_CR_back', y='days_difference_fee_paid', palette="viridis")
+    plt.title("Scatter plot between number of days to compleate a CR payment and a Fee payment", fontsize=14, fontweight='bold')
+    plt.ylabel("Number of days for compleated fee incident", fontsize=12)
+    plt.xlabel("Number of days for money back from a CR", fontsize=12)
+    plt.savefig("plots/scatter_plot_CR_days_fee_days.png", dpi=300, bbox_inches='tight')
+    plt.show()
+
+
+
+
