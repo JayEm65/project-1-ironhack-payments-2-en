@@ -1,3 +1,6 @@
+'''This file groups functions for data cleaning, like dealing with NaN values,
+    merging data frames, and formatting dates'''
+
 import pandas as pd
 
 # Load datasets:
@@ -32,31 +35,30 @@ fees_data_date_columns = ['created_at', 'updated_at', 'paid_at', 'from_date', 't
 # Check:
 #print(cash_request_data.head())
 #print(fees_data.head())
-'''This file groups functions for data cleaning like dealing with NaN values,
-    merging data frames, and formatting dates'''
 
 def remove_nan(data_frame, col_):
     '''This function removes the rows where a specific column has NaN values.
        It also prints the number of rows removed and the list of columns and total NaN values per column.'''
     
     print(f"{data_frame[col_].isna().sum()} rows were removed\n")
+    
     return data_frame.dropna(subset = [col_])
 
 
 def selecting_data_types(data_frame):
     '''This function separates data into numerical and categorical columns.'''
 
+    # Selecting data per type
     numerical_df = data_frame.select_dtypes(include=["number"])
     categorical_df = data_frame.select_dtypes(exclude=["number", "datetime64[ns]"])
     datetime_df = data_frame.select_dtypes(include=["datetime64[ns]"])
 
+    # Correcting categorical and numerical columns based in the amount of unique values
     cat_from_num = numerical_df.loc[:, numerical_df.nunique() < 20]
-
     cat_df = pd.concat([categorical_df, cat_from_num], axis=1)
-
     num_df = numerical_df.drop(columns=cat_from_num.columns)
-    #num_df = numerical_df.drop(columns=numerical_df.columns[numerical_df.columns.isin(cat_from_num.columns)])
     
+    # Droping ID columns
     id_columns = [col for col in num_df.columns if ('id' in col.lower()) and (col.lower() != 'user_id')]
     num_df = num_df.drop(columns=id_columns)
 
