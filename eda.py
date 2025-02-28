@@ -150,7 +150,7 @@ def revenue_plot(monthly_totals):
     plt.xticks(rotation=45, ha='right')
     plt.xlabel("Cohort Month", fontsize=12)
     plt.ylabel("Total Amount in Fees", fontsize=12)
-    plt.title("Total Amount in Fees per Cohort", fontsize=14, fontweight='bold')
+    plt.title("Total Amount in Fees per Cohort", fontsize=14)
 
     plt.savefig("plots/revenue_metric_bar_plot.png", dpi=300, bbox_inches='tight')
 
@@ -182,7 +182,7 @@ def revenue_plot_per_user(df):
     plt.xticks(rotation=45, ha='right')  # Rotate x labels for readability
     plt.xlabel("Cohort Month", fontsize=12)
     plt.ylabel("Average Revenue per User", fontsize=12)
-    plt.title("Average revenue per user by cohort", fontsize=14, fontweight='bold')
+    plt.title("Average Revenue per User by Cohort", fontsize=14)
 
     plt.savefig("plots/average_revenue_per_user.png", dpi=300, bbox_inches="tight")
 
@@ -291,9 +291,11 @@ def bi_rev_incid(cat_new, num_new):
     monthly_totals = df_grouped.groupby('cohort_month')[columns_to_aggregate].sum().reset_index()
     df_merged = monthly_totals.merge(num_new, on='cohort_month', how='inner')
     df_merged = df_merged[["cohort_month", "total_fees","Instant Payment Cash Request", "Postpone Cash Request", "month delay on payment", "rejected direct debit"]]
+    df_merged.rename(columns={'month delay on payment': 'Month Delay on Payment'}, inplace=True)
+    df_merged.rename(columns={'rejected direct debit': 'Rejected Direct Debit'}, inplace=True)
 
     df_melted = df_merged.melt(id_vars=["cohort_month", "total_fees"], 
-                    value_vars=["Instant Payment Cash Request", "Postpone Cash Request", "month delay on payment", "rejected direct debit"],
+                    value_vars=["Instant Payment Cash Request", "Postpone Cash Request", "Month Delay on Payment", "Rejected Direct Debit"],
                     var_name="incident_reason", 
                     value_name="revenue")
 
@@ -305,15 +307,15 @@ def bi_rev_incid(cat_new, num_new):
     # Beautify the plot
     plt.xticks(rotation=45, ha='right')  # Rotate x-axis labels for readability
     plt.xlabel("Cohort Month", fontsize=12)
-    plt.ylabel("Revenue Breakdown", fontsize=12)
-    plt.title("Revenue Breakdown by Incident Reason for Each Cohort", fontsize=14, fontweight='bold')
+    plt.ylabel("Total Revenue", fontsize=12)
+    plt.title("Revenue Breakdown by Incident Reason for Each Cohort", fontsize=14)
 
     # Show the plot
     plt.legend(title="Incident Reason", loc="upper left")
     plt.tight_layout()
     plt.savefig("plots/bivariant_bar_plot_revenue_incident.png", dpi=300, bbox_inches="tight")
     plt.show()
-    return df_merged
+    return (df_merged, df_melted)
 
 def restruct(df_new, num_c):
     df_new = df_new.reset_index()
@@ -367,12 +369,14 @@ def cat_con(cat, num):
     df_merged = cat.merge(num, on='CR_created_at', how='inner')
     df_merged = df_merged.reset_index(drop=True)
 
+
+
     plt.figure(figsize=(12, 6))
     pd.set_option('display.max_columns', None)
 
     sns.boxplot(data=df_merged, x="reason", y="days_difference_fee_paid", palette="viridis")
     plt.xticks(rotation=45, ha='right')
-    plt.title("Box plot between the fee incident and the payment time", fontsize=14, fontweight='bold')
+    plt.title("Box plot between the fee incident and the payment time", fontsize=14)
     plt.ylabel("Times in day to pay the fee", fontsize=12)
     plt.xlabel("Fee reason", fontsize=12)
     plt.savefig("plots/box_plot_incident_days.png", dpi=300, bbox_inches='tight')
@@ -384,7 +388,7 @@ def line_plot(cat, num):
     df_merged = df_merged.dropna(subset=["days_difference_CR_back", "days_difference_fee_paid"])
 
     sns.scatterplot(data=df_merged, x='days_difference_CR_back', y='days_difference_fee_paid', palette="viridis")
-    plt.title("Scatter plot between number of days to compleate a CR payment and a Fee payment", fontsize=14, fontweight='bold')
+    plt.title("Scatter plot between number of days to compleate a CR payment and a Fee payment", fontsize=14)
     plt.ylabel("Number of days for compleated fee incident", fontsize=12)
     plt.xlabel("Number of days for money back from a CR", fontsize=12)
     plt.savefig("plots/scatter_plot_CR_days_fee_days.png", dpi=300, bbox_inches='tight')
