@@ -55,22 +55,21 @@ def cat_viz(df, cat, col_):
 
     # Generate a pie chart for category columns
 
-    fig_pie, ax_pie = plt.subplots(figsize=(7, 5))
-
     # Generating the freuqncy tables
-    frequency_table = df[col_].value_counts()
-    frequency_table.index = frequency_table.index.astype(str).str.replace("_", " ")
-    frequency_table.index = frequency_table.index.str.title()
+    ##frequency_table = df[col_].value_counts()
+    ##frequency_table.index = frequency_table.index.astype(str).str.replace("_", " ")
+    ##frequency_table.index = frequency_table.index.str.title()
 
     # Pie plot
-    frequency_table.plot.pie(autopct='%1.0f%%' ,startangle=90, colors=sns.color_palette('Set2'), ax=ax_pie)
-    ax_pie.set_title(f'{formatted_title} Absolute Frequency')
-    ax_pie.set_ylabel('')
-    plt.show()
+    ##fig_pie, ax_pie = plt.subplots(figsize=(7, 5))
+    ##frequency_table.plot.pie(autopct='%1.0f%%' ,startangle=90, colors=sns.color_palette('Set2'), ax=ax_pie)
+    ##ax_pie.set_title(f'{formatted_title} Absolute Frequency')
+    ##ax_pie.set_ylabel('')
+    ##plt.show()
 
     # Saving the plot
-    pie_plot_path = os.path.join(output_dir, f"Pie_plot_{col_}.png")
-    fig_pie.savefig(pie_plot_path, bbox_inches='tight')
+    ##pie_plot_path = os.path.join(output_dir, f"Pie_plot_{col_}.png")
+    ##fig_pie.savefig(pie_plot_path, bbox_inches='tight')
 
 
 def stat(data_frame, col_):
