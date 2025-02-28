@@ -3,7 +3,7 @@ from the data'''
 
 def initial_chk(data_frame):
     '''This function check for the number of columns and rows, 
-        the data types, unique values, pisble categorial values
+        the data types, unique values, posble categorial values
         and unique values count for categorical columns'''
        
     print(f"Number of columns: {data_frame.shape[1]} amd rows: {data_frame.shape[0]}")
@@ -15,7 +15,6 @@ def initial_chk(data_frame):
     print("\nUnique values count:")
     unique_values_count = data_frame.nunique()
     print(unique_values_count)
-
 
     # Let's identify categorical columns 
     categorical_columns = unique_values_count[unique_values_count < 10].index
